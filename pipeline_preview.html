@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Pipeline 2025 - Preview Web App</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fafafa; margin: 0; padding: 0; }
+    .container { max-width: 98vw; margin: 20px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0002; padding: 24px; }
+    h2 { margin-top: 0; font-weight: 400; }
+    input[type="file"] { margin-bottom: 20px; }
+    .search { margin-bottom: 10px; }
+    table { border-collapse: collapse; width: 100%; overflow-x: auto; display: block; }
+    th, td { border: 1px solid #e0e0e0; padding: 8px 6px; text-align: left; white-space: nowrap; }
+    th { background: #f0f0f0; font-weight: 600; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    tr.highlight { background: #ffe5b4; }
+    @media (max-width: 900px) {
+      .container { padding: 4px; }
+      th, td { font-size: 13px; }
+    }
+    #table-container { max-height: 70vh; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Anteprima Pipeline 2025</h2>
+    <input type="file" id="csvFile" accept=".csv" />
+    <input class="search" type="text" id="searchInput" placeholder="Cerca cliente, owner, mese, ecc..." />
+    <div id="table-container"></div>
+  </div>
+  <script>
+    let cachedLines = [];
+    document.getElementById('csvFile').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        cachedLines = event.target.result.split('\n').filter(l=>!!l.trim());
+        renderTable();
+      };
+      reader.readAsText(file);
+    });
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+
+    function renderTable() {
+      if (!cachedLines.length) return;
+      const query = document.getElementById('searchInput').value.trim().toLowerCase();
+      let html = '<table><thead><tr>';
+      const headers = cachedLines[0].replace(/"/g, '').split(';');
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += '</tr></thead><tbody>';
+      for(let i=1;i<cachedLines.length;i++) {
+        const line = cachedLines[i];
+        if (line.trim() === '') continue;
+        const cells = line.replace(/"/g, '').split(';');
+        // search match
+        if (query && !cells.some(c => c.toLowerCase().includes(query))) continue;
+        html += '<tr>';
+        cells.forEach(c => html += `<td>${c}</td>`);
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      document.getElementById('table-container').innerHTML = html;
+    }
+  </script>
+</body>
+</html>
